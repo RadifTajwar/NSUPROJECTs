@@ -10,53 +10,56 @@ export default function page() {
     const [storyScenario, setStoryScenario] = useState<string[]>([]);
     const [completeStory, setCompleteStory] = useState(true)
     const [title, setTitle] = useState('')
+    const [percentage, setPercentage] = useState(0)
     useEffect(() => {
-        // Fetch storyPrompt from local storage
-        const storyPrompt = localStorage.getItem('storyPrompt');
-        console.log(storyPrompt);
+        const fetchData = async () => {
+            try {
+                // Fetch storyPrompt from local storage
+                const storyPrompt = localStorage.getItem('storyPrompt');
+                console.log(storyPrompt);
+    
+                if (storyPrompt) {
+                    // Make a POST request with Axios
+                    const response = await axios.post('http://localhost:5000/api/story/promptGenerate', { prompt: storyPrompt });
 
-
-        if (storyPrompt) {
-            // Make a POST request with Axios
-            axios.post('http://localhost:5000/api/story/promptGenerate', { prompt: storyPrompt })
-                .then(response => {
                     // Handle response
                     const dataString = response.data.success;
                     var pattern = /"([^"]+)"/;
-
+    
                     // Match the pattern in the title string
                     var match = dataString.match(pattern);
-
+    
                     // Extract the text from the matched group
                     var titleText = match ? match[1] : "";
                     var slicedText = titleText.slice(1, titleText.length - 1);
+    
                     setTitle(slicedText);
+                    console.log("this is "+title.length)
+                    
                     const startIndex = dataString.indexOf('[');
                     const endIndex = dataString.lastIndexOf(']');
-
+    
                     // Extract the array string and remove leading/trailing whitespace
                     const arrayString = dataString.slice(startIndex, endIndex + 1).trim();
-
-
+    
                     // Execute the regex on the markdown string
-
-
+    
                     // Convert the array string to a JavaScript array
                     const story_scenario = eval(arrayString);
                     console.log(dataString);
                     setStoryScenario(story_scenario);
-                    setCompleteStory(false)
-
-                })
-                .catch(error => {
-                    // Handle error
-                    console.error('Error fetching data:', error);
-                });
-        }
-
-        // Find the start and end index of the array within the string
-
+                    setCompleteStory(false);
+                    setPercentage(100);
+                }
+            } catch (error) {
+                // Handle error
+                console.error('Error fetching data:', error);
+            }
+        };
+    
+        fetchData();
     }, []); // Empty dependency array ensures this runs only once on component mount
+    
 
     return (
         <>
@@ -110,10 +113,10 @@ export default function page() {
                         <p className="font-kid text-lg">Text</p>
                         <div className="flex justify-between mb-1 font-medium text-xs text-gray-500">
                             <span className=""></span>
-                            <span className="">100%</span>
+                            <span className="">{percentage}%</span>
                         </div>
                         <div className="w-full h-3 bg-blue-100 bg-opacity-50 rounded-full">
-                            <div className="h-3 rounded-full bg-green-500" style={{ width: '100%' }}>
+                            <div className="h-3 rounded-full bg-green-500" style={{ width: `${percentage}%` }}>
                             </div>
                         </div>
                     </div>
